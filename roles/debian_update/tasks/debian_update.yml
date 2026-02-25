@@ -1,0 +1,54 @@
+---
+- name: Update package cache
+  ansible.builtin.apt:
+    update_cache: true
+    dpkg_options:
+      - "{{ dpkg_options }}"
+
+- name: Upgrade all packages
+  ansible.builtin.apt:
+    upgrade: safe
+
+- name: Check if a reboot is necessary because the file '{{ reboot_chek_file }}' exists
+  ansible.builtin.stat:
+    path: "{{ reboot_chek_file }}"
+    get_checksum: false
+  register: reboot_required_file
+
+- name: Check if a reboot is necessary because of different kernel versions
+  block:
+    - name: Get running kernel version from uname
+      ansible.builtin.command: uname -r
+      register: running_kernel
+      changed_when: false
+
+    - name: Get installed kernel version from /boot
+      ansible.builtin.shell: |
+        ls -1 /boot/vmlinuz-* | sed 's/.*vmlinuz-//' | sort -V | tail -1
+      register: installed_kernel
+      changed_when: false
+
+    - name: Compare versions
+      ansible.builtin.set_fact:
+        reboot_required_kernel: "{{ running_kernel.stdout != installed_kernel.stdout }}"
+  when: ansible_virtualization_type != 'lxc'
+
+- name: Notify handler if reboot is required
+  ansible.builtin.debug:
+    msg: "Reboot is required"
+  notify: Reboot the server
+  changed_when: true
+  when: (reboot_required_file.stat.exists == true) or (reboot_required_kernel | default(false) == true)
+
+- name: Flush handlers to reboot immediately if needed
+  ansible.builtin.meta: flush_handlers
+
+- name: Remove old packages from the cache
+  ansible.builtin.apt:
+    autoclean: true
+    clean: true
+
+- name: Remove dependencies that are no longer required
+  ansible.builtin.apt:
+    autoremove: true
+    purge: true

@@ -1,0 +1,11 @@
+---
+- name: Debian update
+  hosts: all
+  ignore_unreachable: true
+  gather_facts: true
+
+  tasks:
+    - name: Debian update role
+      ansible.builtin.import_role:
+        name: debian_update
+      tags: debian_update
