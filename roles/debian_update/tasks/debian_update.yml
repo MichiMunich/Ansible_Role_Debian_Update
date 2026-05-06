@@ -31,7 +31,7 @@
     - name: Compare versions
       ansible.builtin.set_fact:
         reboot_required_kernel: "{{ running_kernel.stdout != installed_kernel.stdout }}"
-  when: ansible_virtualization_type != 'lxc'
+  when: ansible_facts["virtualization_type"] != "lxc"
 
 - name: Notify handler if reboot is required
   ansible.builtin.debug:
