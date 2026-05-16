@@ -2,5 +2,5 @@
 - name: Reboot the server
   ansible.builtin.reboot:
     msg: "Reboot initiated by Ansible"
-    reboot_timeout: 180
+    reboot_timeout: "{{ reboot_timeout_sec }}"
   become: true
