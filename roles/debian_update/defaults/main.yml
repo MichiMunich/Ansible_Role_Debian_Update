@@ -1,3 +1,4 @@
 ---
 dpkg_options: "-o APT::Key::GPGVCommand=1"
 reboot_chek_file: "/var/run/reboot-required"
+reboot_timeout_sec: 240
